@@ -1,0 +1,28 @@
+[
+{
+   "id": 1,
+   "name": "Узел1",
+   "description": "слово слово2 слово3",
+   "tags": [
+       {"id": 1, "name": "морской", "type": "CATEGORY"},
+       {"id": 2, "name": "такелаж", "type": "PURPOSE"}
+   ],
+   "pictures": [
+       "1.1",
+       "1.2"
+   ]
+},
+{
+   "id": 2,
+   "name": "Узел2",
+   "description": "слово5 слово2 слово3",
+   "tags": [
+       {"id": 1, "name": "морской", "type": "CATEGORY"},
+       {"id": 1, "name": "швартовка", "type": "PURPOSE"}
+   ],
+   "pictures": [
+       "2.1",
+       "2.2"
+   ]
+}
+]
