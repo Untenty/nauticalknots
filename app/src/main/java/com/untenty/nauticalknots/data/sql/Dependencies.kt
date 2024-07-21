@@ -14,7 +14,7 @@ object Dependencies {
     }
 
     private val appDatabase: AppDatabase by lazy {
-        Room.databaseBuilder(applicationContext, AppDatabase::class.java, "database0.db").build()
+        Room.databaseBuilder(applicationContext, AppDatabase::class.java, "database1.db").build()
     }
 
     val dbRepository: DbRepository by lazy { DbRepository(appDatabase.getDao()) }

@@ -1,13 +1,14 @@
 package com.untenty.nauticalknots.entity
 
+import androidx.compose.runtime.mutableStateOf
 import com.untenty.nauticalknots.data.sql.KnotDbEntity
 
 data class Knot(
     val id: Long,
     val name: String,
     val description: String,
-    val tags: List<Tag>,
-    val pictures: List<String>
+    val tags: MutableList<Tag> = mutableListOf(),
+    val pictures: MutableList<String> = mutableListOf()
 ){
     fun toKnotDbEntity(): KnotDbEntity = KnotDbEntity(
         id = id,

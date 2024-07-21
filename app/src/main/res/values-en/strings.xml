@@ -1,15 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Nautical knots</string>
-    <string name="app_title">Knots</string>
+    <string name="app_title">Nautical knots</string>
     <string name="menu_title">Menu</string>
     <string name="settings_title">Settings</string>
     <string name="all_title">All</string>
-    <string name="tags_title">Tags</string>
+    <string name="tags_title">Groups</string>
     <string name="favorites_title">Favorites</string>
-    <string-array name="languages" translatable="false">
-        <item>en</item>
-        <item>ru</item>
-    </string-array>
     <string name="theme_title">Theme</string>
     <string name="lang_title">Language</string>
     <string name="system_theme">System</string>

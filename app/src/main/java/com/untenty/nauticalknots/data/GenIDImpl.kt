@@ -1,7 +1,7 @@
 package com.untenty.nauticalknots.data
 
 
-class GenIDImpl {
+object GenIDImpl {
     fun getNexID(): Long {
         return System.currentTimeMillis()
     }

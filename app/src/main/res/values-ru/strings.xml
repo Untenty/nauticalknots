@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Морские узлы</string>
+    <string name="app_title">Морские узлы</string>
+    <string name="menu_title">Меню</string>
+    <string name="settings_title">Настройки</string>
+    <string name="all_title">Все</string>
+    <string name="tags_title">Группы</string>
+    <string name="favorites_title">Избранное</string>
+    <string name="theme_title">Тема</string>
+    <string name="lang_title">Язык</string>
+    <string name="system_theme">Системная</string>
+    <string name="dark_theme">Тёмная</string>
+    <string name="light_theme">Светлая</string>
+</resources>

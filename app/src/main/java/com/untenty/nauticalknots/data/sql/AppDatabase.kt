@@ -4,12 +4,13 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 
 @Database(
-    version = 1,
+    version = 3,
     entities = [
         KnotDbEntity::class,
         TagDbEntity::class,
         TagKnotDbEntity::class,
         FavoriteKnotDbEntity::class,
+        PictureDbEntity::class
     ]
 )
 abstract class AppDatabase : RoomDatabase() {

@@ -20,10 +20,12 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+        resourceConfigurations += setOf("en", "ru")
 
         ksp {
-            arg ("room.schemaLocation", "$projectDir/schemas")
+            arg("room.schemaLocation", "$projectDir/schemas")
         }
+
     }
 
     buildTypes {
@@ -65,6 +67,9 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.runtime.livedata)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.compose.material)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -86,5 +91,21 @@ dependencies {
     ksp(libs.moshi.kotlin.codegen)
 
     implementation(libs.kotlinx.serialization.json)
+
+    implementation(libs.coil.compose)
+
+    implementation(libs.androidx.navigation.compose)
+//    implementation(androidx.appcompat:appcompat:{latest_version})
+
+    //implementation(libs.accompanist.reorderable)
+    //implementation(libs.reorderable)
+    //implementation("org.burnoutcrew.composereorderable:reorderable:<latest_version>")
+//    implementation("org.burnoutcrew.composereorderable:reorderable:<latest_version>")
+//
+    implementation(libs.androidx.foundation)
+    implementation(libs.androidx.runtime)
+//    implementation(libs.accompanist.placeholder)
+
+    implementation(libs.gson)
 
 }

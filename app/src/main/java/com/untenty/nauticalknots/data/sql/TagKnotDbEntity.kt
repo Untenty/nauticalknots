@@ -9,6 +9,7 @@ import androidx.room.PrimaryKey
     indices = [Index("idTag"), Index("idKnot")]
 )
 data class TagKnotDbEntity(
-    @PrimaryKey val idTag: Long,
+    @PrimaryKey val id: Long,
+    val idTag: Long,
     val idKnot: Long,
 )
