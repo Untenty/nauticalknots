@@ -1,7 +1,7 @@
 [versions]
 accompanistPlaceholder = "0.10.0"
 accompanistReorderable = "<latest_version>"
-agp = "8.5.1"
+agp = "8.5.2"
 coilCompose = "2.0.0"
 datastorePreferences = "1.1.1"
 foundation = "1.6.8"

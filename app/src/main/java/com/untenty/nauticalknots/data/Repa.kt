@@ -28,7 +28,6 @@ object Repa {
 
     private var listKnots: MutableState<List<Knot>> = mutableStateOf(listOf())
     private var listTags: MutableState<List<Tag>> = mutableStateOf(listOf())
-    private var listKnotsByTag: MutableState<List<Knot>> = mutableStateOf(listOf())
     private var favoriteKnots: MutableState<List<FavoriteKnot>> = mutableStateOf(listOf())
 
     fun init(context: Context) {
@@ -40,6 +39,7 @@ object Repa {
             readKnots()
             readTags()
             readFavoriteKnots()
+//            initKnotsOfTags()
         }
     }
 
@@ -122,10 +122,10 @@ object Repa {
         }
     }
 
-    fun readKnots() {
+    fun readKnots(searchText: String = "") {
         CoroutineScope(Dispatchers.IO).launch {
             val listKnots2: MutableList<Knot> = mutableListOf()
-            for (knotDB in Dependencies.dbRepository.getAllKnots()) {
+            for (knotDB in Dependencies.dbRepository.getAllKnots(searchText)) {
                 val newKnot = Knot(knotDB.id, knotDB.name, knotDB.description)
                 for (tagDB in Dependencies.dbRepository.getAllTagsKnot(knotDB.id)) {
                     val tag = Dependencies.dbRepository.getTagByID(tagDB.idTag)
@@ -143,22 +143,6 @@ object Repa {
 
     fun getAllKnots(): MutableState<List<Knot>> {
         return listKnots
-    }
-
-    fun getKnotsByTag(): MutableState<List<Knot>> {
-        return listKnotsByTag
-    }
-
-    fun readKnotsByTag(tag: Tag?) {
-        CoroutineScope(Dispatchers.IO).launch {
-            val list: MutableList<Knot> = mutableListOf()
-            if (tag != null) {
-                Dependencies.dbRepository.getAllKnotsTag(tag.id).forEach { tagKnot ->
-                    listKnots.value.find { it.id == tagKnot.idKnot }?.apply { list.add(this) }
-                }
-            }
-            listKnotsByTag.value = list
-        }
     }
 
     fun getKnot(id: Long): Knot? {
@@ -189,8 +173,10 @@ object Repa {
 
     fun insertFavoriteKnot(favoriteKnot: FavoriteKnot) {
         CoroutineScope(Dispatchers.IO).launch {
-            Dependencies.dbRepository.insertNewFavoriteKnot(favoriteKnot.toFavoriteKnotDbEntity())
-            readFavoriteKnots()
+            if (favoriteKnots.value.find { it.id == favoriteKnot.id } == null) {
+                Dependencies.dbRepository.insertNewFavoriteKnot(favoriteKnot.toFavoriteKnotDbEntity())
+                readFavoriteKnots()
+            }
         }
     }
 

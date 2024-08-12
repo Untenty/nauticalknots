@@ -1,5 +1,6 @@
 package com.untenty.nauticalknots.data.sql
 
+import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
@@ -10,8 +11,8 @@ interface DbDao {
     @Insert(entity = KnotDbEntity::class)
     fun insertNewKnot(knot: KnotDbEntity)
 
-    @Query("SELECT id, name, description FROM Knots ORDER BY name")
-    fun getAllKnots(): List<KnotInfoTuple>
+    @Query("SELECT id, name, description FROM Knots WHERE (name like '%' || :searchText || '%' or :searchText = '') ORDER BY name")
+    fun getAllKnots(searchText: String = ""): List<KnotInfoTuple>
 
     @Query("SELECT id, name, description FROM Knots WHERE id=:id")
     fun getKnot(id: Long): KnotInfoTuple
@@ -53,7 +54,7 @@ interface DbDao {
     fun getAllTagsKnot(id: Long): List<TagKnotInfoTuple>
 
     @Query("SELECT idTag, idKnot FROM TagsKnots WHERE idTag = :id")
-    fun getAllKnotsTag(id: Long): List<TagKnotInfoTuple>
+    fun getAllKnotsTag(id: Long): LiveData<List<TagKnotInfoTuple>>
 
     // Pictures
     @Insert(entity = PictureDbEntity::class)

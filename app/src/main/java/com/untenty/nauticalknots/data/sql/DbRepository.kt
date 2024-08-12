@@ -1,5 +1,6 @@
 package com.untenty.nauticalknots.data.sql
 
+import androidx.lifecycle.LiveData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -11,9 +12,9 @@ class DbRepository(private val dbDao: DbDao) {
         }
     }
 
-    suspend fun getAllKnots(): List<KnotInfoTuple> {
+    suspend fun getAllKnots(searchText: String = ""): List<KnotInfoTuple> {
         return withContext(Dispatchers.IO) {
-            return@withContext dbDao.getAllKnots()
+            return@withContext dbDao.getAllKnots(searchText)
         }
     }
 
@@ -92,7 +93,7 @@ class DbRepository(private val dbDao: DbDao) {
         }
     }
 
-    suspend fun getAllKnotsTag(id: Long): List<TagKnotInfoTuple> {
+    suspend fun getAllKnotsTag(id: Long): LiveData<List<TagKnotInfoTuple>> {
         return withContext(Dispatchers.IO) {
             return@withContext dbDao.getAllKnotsTag(id)
         }

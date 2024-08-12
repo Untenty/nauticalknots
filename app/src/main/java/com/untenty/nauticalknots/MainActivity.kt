@@ -13,11 +13,12 @@ import android.util.DisplayMetrics
 import android.view.WindowManager
 import android.view.WindowMetrics
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -27,6 +28,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -42,11 +44,14 @@ import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
@@ -72,9 +77,11 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -85,6 +92,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
@@ -92,6 +101,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
@@ -130,8 +140,8 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             NauticalknotsTheme(
-                ((Settings.theme.value == ThemeK.SYSTEM) and (isSystemInDarkTheme()) or (Settings.theme.value == ThemeK.DARK)),
-                Settings.theme.value == ThemeK.SYSTEM
+                darkTheme = ((Settings.theme.value == ThemeK.SYSTEM) and (isSystemInDarkTheme())) or (Settings.theme.value == ThemeK.DARK),
+                dynamicColor = Settings.theme.value == ThemeK.SYSTEM
             ) {
                 Surface(
                     modifier = Modifier.fillMaxSize()//, color = MaterialTheme.colorScheme.background
@@ -287,24 +297,61 @@ fun KnotItem(
             .background(MaterialTheme.colorScheme.primaryContainer)
             .combinedClickable(
                 onClick = {
-                    viewModel.selectElement(knot.id)
+                    viewModel.openKnot(knot.id)
                     navHostController.navigate(Screen.KnotCard.route)
                 }, onLongClick = {
-
+                    viewModel.modeSelect(true)
+                    viewModel.selectItem(knot.id)
                 })
-
     ) {
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .height(50.dp), verticalAlignment = Alignment.CenterVertically
+                .height(50.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 viewModel.getLanguageString(knot.name),
                 modifier = Modifier
-                    .fillMaxWidth()//.height(50.dp)
+//                    .fillMaxWidth()//.height(50.dp)
                     .padding(start = 10.dp)
             )
+            if (viewModel.modeSelect.value) {
+                var isSelect by remember(knot.id) {
+                    mutableStateOf(
+                        viewModel.selectedItems.value.contains(
+                            knot.id
+                        )
+                    )
+                }
+                Spacer(Modifier)
+                IconToggleButton(
+                    checked = isSelect,
+                    onCheckedChange = {
+                        isSelect = !isSelect
+                        if (isSelect)
+                            viewModel.selectItem(knot.id)
+                        else
+                            viewModel.unselectItem(knot.id)
+                    }
+                ) {
+                    if (isSelect)
+                        Canvas(modifier = Modifier.fillMaxSize()) {
+                            drawCircle(
+                                color = Color.Red,
+                                radius = size.minDimension / 2
+                            )
+                        }
+                    else
+                        Canvas(modifier = Modifier.fillMaxSize()) {
+                            drawCircle(
+                                color = Color.White,
+                                radius = size.minDimension / 2
+                            )
+                        }
+                }
+            }
         }
     }
 }
@@ -358,11 +405,78 @@ fun TopBar(
 ) {
     TopAppBar(
         title = {
-            Text(stringResource(R.string.app_title))
+            if (viewModel.showSearchText.value) {
+                val focusRequester = remember { FocusRequester() }
+                TextField(
+                    value = viewModel.searchText.value,
+                    onValueChange = {
+                        viewModel.searchText.value = it
+                        Repa.readKnots(viewModel.searchText.value)
+                    },
+                    singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(focusRequester),
+                    trailingIcon = {
+                        Icon(Icons.Default.Clear,
+                            contentDescription = "clear text",
+                            modifier = Modifier
+                                .clickable {
+                                    viewModel.showSearchText.value = false
+                                    viewModel.searchText.value = ""
+                                    Repa.readKnots()
+                                }
+                        )
+                    }
+                )
+                LaunchedEffect(Unit) {
+                    focusRequester.requestFocus()
+                }
+            } else
+                Text(stringResource(R.string.app_title))
+
         },
         navigationIcon = {
             IconButton(onClick = { scope.launch { drawerState.open() } }) {
                 Icon(Icons.Filled.Menu, contentDescription = null)
+            }
+        },
+        actions = {
+            Row {
+                IconButton(onClick = {
+                    viewModel.showSearchText.value = !viewModel.showSearchText.value
+                    if (!viewModel.showSearchText.value) {
+                        viewModel.searchText.value = ""
+                        Repa.readKnots()
+                    }
+                }) {
+                    Icon(Icons.Filled.Search, contentDescription = null)
+                }
+                if (viewModel.modeSelect.value) {
+                    IconButton(onClick = {
+                        viewModel.modeSelect(false)
+                    }) {
+                        Icon(Icons.Filled.Clear, contentDescription = "cancel select")
+                    }
+                    IconButton(onClick = {
+                        viewModel.unfavoriteSelectItems()
+                    }) {
+                        Icon(
+                            tint = Color(0xffE91E63),
+                            imageVector = Icons.Filled.FavoriteBorder,
+                            contentDescription = "delete favorite"
+                        )
+                    }
+                    IconButton(onClick = {
+                        viewModel.favoriteSelectItems()
+                    }) {
+                        Icon(
+                            tint = Color(0xffE91E63),
+                            imageVector = Icons.Default.Favorite,
+                            contentDescription = "delete favorite"
+                        )
+                    }
+                }
             }
         }
     )
@@ -389,7 +503,6 @@ fun Menu(navHostController: NavHostController, drawerState: DrawerState, scope: 
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun KnotCardScreen(
     viewModel: MainViewModel,
@@ -411,7 +524,7 @@ fun KnotCardScreen(
                     horizontalArrangement = Arrangement.End
                 ) { FavoriteButton(knot) }
             }
-            DescriptionKnot(knot, viewModel, modifier = modifier2)
+            DescriptionKnot(knot, viewModel, modifier = modifier2, context)
         }
     }
 }
@@ -486,7 +599,7 @@ fun ImageKnot(knot: Knot, viewModel: MainViewModel, context: Context, modifier: 
 }
 
 @Composable
-fun DescriptionKnot(knot: Knot, viewModel: MainViewModel, modifier: Modifier) {
+fun DescriptionKnot(knot: Knot, viewModel: MainViewModel, modifier: Modifier, context: Context) {
     SelectionContainer(modifier = modifier) {
         Column(
             modifier = Modifier
@@ -505,7 +618,10 @@ fun DescriptionKnot(knot: Knot, viewModel: MainViewModel, modifier: Modifier) {
                 ShowHideDescriptionButton(viewModel, Modifier.weight(1f))
             }
             if (viewModel.showHideDescription.value) {
-                HtmlTextField(viewModel.getLanguageString(knot.description))
+                HtmlTextField(
+                    htmlText = viewModel.getLanguageString(knot.description),
+                    context = context
+                )
             }
         }
     }
@@ -547,15 +663,17 @@ fun HtmlTextField(
     baseSpanStyle: SpanStyle? = null,
     isHighlightLink: Boolean = false,
     style: TextStyle = LocalTextStyle.current,
-    onUrlClick: ((url: String) -> Unit)? = null
+    onUrlClick: ((url: String) -> Unit)? = null,
+    context: Context
 ) {
     val formattedText = Html.fromHtml(htmlText.replace("\n", "<br>"), Html.FROM_HTML_MODE_COMPACT)
     val uriHandler = LocalUriHandler.current
     val linkColor = if (isHighlightLink) Color.Blue else Color.Unspecified
     val annotatedString =
         formattedText.toAnnotateString(baseSpanStyle = baseSpanStyle, linkColor = linkColor)
+//    var textColor by remember { mutableStateOf(Color.Black) }
     val colorText =
-        if ((Settings.theme.value == ThemeK.SYSTEM) and (isSystemInDarkTheme()) or (Settings.theme.value == ThemeK.DARK)) Color.White else Color.Black
+        if (((Settings.theme.value == ThemeK.SYSTEM) and (isSystemInDarkTheme())) or (Settings.theme.value == ThemeK.DARK)) Color.White else Color.Black
     ClickableText(
         modifier = Modifier
             .fillMaxWidth()
@@ -564,6 +682,7 @@ fun HtmlTextField(
         style = TextStyle(
             textAlign = TextAlign.Justify,
             color = colorText,
+//            color = if ((Settings.theme.value == ThemeK.SYSTEM) and (isSystemInDarkTheme()) or (Settings.theme.value == ThemeK.DARK)) Color.White else Color.Black,
             fontSize = TextUnit(20f, TextUnitType.Sp)
         ),
     ) { offset ->
@@ -599,6 +718,7 @@ fun Spanned.toAnnotateString(
                 )
 
                 is ForegroundColorSpan -> addStyle(
+//                    SpanStyle(color = Color.Black), start, end
                     SpanStyle(color = Color(span.foregroundColor)), start, end
                 )
 
@@ -621,31 +741,27 @@ fun TagsListScreen(
     viewModel: MainViewModel,
     navHostController: NavHostController
 ) {
+    viewModel.initKnotsOfTags(LocalLifecycleOwner.current)
     if (viewModel.selectedTag.value != null) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            //.padding(top = 0.dp)
-            //contentPadding = contentPadding
-        ) {
-            items(viewModel.getKnotsByTag().value) { knot ->
-                KnotItem(viewModel, knot, navHostController)
-            }
-        }
-        BackHandler {
-            viewModel.selectTag(null)
-        }
+
     } else {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            //.padding(top = 0.dp)
-            //contentPadding = contentPadding
         ) {
             items(Repa.getTags().value) { tag ->
                 TagItem(viewModel, tag, navHostController)
+                viewModel.getKnotsByTag(tag)?.apply {
+                    for (id in this.value) {
+                        Repa.getKnot(id)?.apply {
+                            KnotItem(viewModel, this, navHostController)
+                        }
+                    }
+                }
             }
         }
     }
 }
+
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -658,22 +774,23 @@ fun TagItem(
         modifier = Modifier
             .padding(5.dp)
             .clip(RoundedCornerShape(5.dp))
-            .background(MaterialTheme.colorScheme.secondaryContainer)
+            .background(MaterialTheme.colorScheme.errorContainer)
     ) {
+        val lifeCycleOwner = LocalLifecycleOwner.current
         Row(
             modifier = Modifier
                 .fillMaxSize()
                 .height(50.dp)
                 .combinedClickable(
                     onClick = {
-                        viewModel.selectTag(tag)
+                        viewModel.openCloseKnotsTag(lifeCycleOwner, tag)
                     }, onLongClick = {
 
                     }), verticalAlignment = Alignment.CenterVertically
         ) {
+            val prefix = if (viewModel.getKnotsByTag(tag)?.value?.size == 0) "+" else "-"
             Text(
-                viewModel.getLanguageString(tag.name),
-                //color = Color.Red,
+                "$prefix ${viewModel.getLanguageString(tag.name)}",
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
@@ -681,9 +798,9 @@ fun TagItem(
             )
         }
     }
+
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FavoriteListScreen(
     contentPadding: PaddingValues,
@@ -694,7 +811,9 @@ fun FavoriteListScreen(
         modifier = Modifier.fillMaxSize(),
     ) {
         items(Repa.getFavoriteKnots().value) { favKnot ->
-            FavoriteKnotItem(viewModel, Repa.getKnot(favKnot.id)!!, navHostController)
+            Repa.getKnot(favKnot.id)?.apply {
+                FavoriteKnotItem(viewModel, this, navHostController)
+            }
         }
     }
 
@@ -707,7 +826,7 @@ fun FavoriteKnotItem(
     knot: Knot,
     navHostController: NavHostController
 ) {
-    val dismissState2 = SwipeToDismissBoxState(
+    val dismissState = SwipeToDismissBoxState(
         initialValue = SwipeToDismissBoxValue.Settled,
         confirmValueChange = {
             when (it) {
@@ -744,8 +863,8 @@ fun FavoriteKnotItem(
 //    )
 
     SwipeToDismissBox(
-        state = dismissState2,
-        backgroundContent = { },
+        state = dismissState,
+        backgroundContent = { DismissBackground(dismissState) },
         enableDismissFromEndToStart = false,
     ) {
         Box(
@@ -755,25 +874,14 @@ fun FavoriteKnotItem(
                 .background(MaterialTheme.colorScheme.primaryContainer)
                 .combinedClickable(
                     onClick = {
-                        viewModel.selectElement(knot.id)
+                        viewModel.openKnot(knot.id)
                         navHostController.navigate(Screen.KnotCard.route)
                     }, onLongClick = {
 
                     })
 
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .height(50.dp), verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    viewModel.getLanguageString(knot.name),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 10.dp)
-                )
-            }
+            KnotItem(viewModel, knot, navHostController)
         }
     }
 }
@@ -781,29 +889,36 @@ fun FavoriteKnotItem(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DismissBackground(dismissState: SwipeToDismissBoxState) {
-//    val color = when (dismissState.dismissDirection) {
-//        SwipeToDismissBoxValue.StartToEnd -> Color(0xFFFF1744)
-//        SwipeToDismissBoxValue.EndToStart -> Color(0xFF1DE9B6)
-//        SwipeToDismissBoxValue.Settled -> Color.Transparent
-//    }
+    val color = when (dismissState.dismissDirection) {
+        SwipeToDismissBoxValue.StartToEnd -> Color(0xFFFF1744)
+        SwipeToDismissBoxValue.EndToStart -> Color.Transparent
+        SwipeToDismissBoxValue.Settled -> Color.Transparent
+    }
 
-//    Row(
-//        modifier = Modifier
-//            .fillMaxSize()
-//            .background(color)
-//            .padding(12.dp, 8.dp),
-//        verticalAlignment = Alignment.CenterVertically,
-//        horizontalArrangement = Arrangement.SpaceBetween
-//    ) {
-////        Icon(
-////            Icons.Default.Delete,
-////            contentDescription = "delete"
-////        )
-//        //Spacer(modifier = Modifier)
-////        Icon(
-////            // make sure add baseline_archive_24 resource to drawable folder
-////            painter = painterResource(coil.base.R.drawable.ic_100tb),
-////            contentDescription = "Archive"
-////        )
-//    }
+    Box(
+        modifier = Modifier
+            .padding(5.dp)
+            .clip(RoundedCornerShape(5.dp))
+            .background(color)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(color)
+                .height(50.dp)
+                .padding(horizontal = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                Icons.Default.Delete,
+                contentDescription = "delete"
+            )
+            Text(
+                "",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 10.dp)
+            )
+        }
+    }
 }
