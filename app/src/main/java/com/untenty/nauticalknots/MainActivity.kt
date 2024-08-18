@@ -61,7 +61,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconToggleButton
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
@@ -74,7 +73,7 @@ import androidx.compose.material3.SwipeToDismissBoxState
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
-import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.SecondaryIndicator
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -119,7 +118,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.untenty.nauticalknots.data.Repa
+import com.untenty.nauticalknots.data.DataRepository
 import com.untenty.nauticalknots.data.Settings
 import com.untenty.nauticalknots.entity.FavoriteKnot
 import com.untenty.nauticalknots.entity.Knot
@@ -131,14 +130,22 @@ import com.untenty.nauticalknots.ui.theme.NauticalknotsTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
+//val LocalAppLocale = staticCompositionLocalOf { Locale.getDefault() }
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Repa.init(applicationContext)
+        DataRepository.init(applicationContext)
         val viewModel = ViewModelProvider(this)[MainViewModel::class.java]
         setDimension(viewModel, this)
 
+//        val locale = loadLocale(this)
+
         setContent {
+            viewModel.setLocale(LocalContext.current, Settings.language.value.name)
+//            val locale = Locale(Settings.language.value.name)
+//            val currentLocale = remember { locale }
+//            LocaleProvider(locale = currentLocale) {
             NauticalknotsTheme(
                 darkTheme = ((Settings.theme.value == ThemeK.SYSTEM) and (isSystemInDarkTheme())) or (Settings.theme.value == ThemeK.DARK),
                 dynamicColor = Settings.theme.value == ThemeK.SYSTEM
@@ -149,9 +156,20 @@ class MainActivity : ComponentActivity() {
                     Screens(viewModel, applicationContext)
                 }
             }
+//            }
         }
     }
 }
+
+//@Composable
+//fun LocaleProvider(
+//    locale: Locale,
+//    content: @Composable () -> Unit
+//) {
+//    CompositionLocalProvider(LocalAppLocale provides locale) {
+//        content()
+//    }
+//}
 
 fun setDimension(viewModel: MainViewModel, context: ComponentActivity) {
     val displayMetrics = DisplayMetrics()
@@ -181,14 +199,12 @@ fun Screens(viewModel: MainViewModel, context: Context) {
     val navHostController = rememberNavController()
     AppNavGraph(navHostController,
         knotsListScreenContent = { MainScreen(viewModel, navHostController) },
-        knotCardScreenContent = { KnotCardScreen(viewModel, navHostController, context) },
+        knotCardScreenContent = { KnotCardScreen(viewModel, context) },
         settingsScreenContent = { SettingsScreen(context, viewModel) })
 }
 
-//@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun MainScreen(viewModel: MainViewModel, navHostController: NavHostController) {
-    viewModel.setLocale(LocalContext.current, Settings.language.value.name)
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     ModalNavigationDrawer(drawerState = drawerState, drawerContent = {
@@ -200,16 +216,15 @@ fun MainScreen(viewModel: MainViewModel, navHostController: NavHostController) {
 
         }, floatingActionButtonPosition = FabPosition.End
         ) {
-            //KnotsList(it, viewModel, navHostController)
             val tabs = listOf(
                 stringResource(R.string.all_title),
                 stringResource(R.string.tags_title),
                 stringResource(R.string.favorites_title)
             )
             val contentScreens: List<@Composable () -> Unit> = listOf(
-                { KnotsList(it, viewModel, navHostController) },
-                { TagsListScreen(it, viewModel, navHostController) },
-                { FavoriteListScreen(it, viewModel, navHostController) })
+                { KnotsList(viewModel, navHostController) },
+                { TagsListScreen(viewModel, navHostController) },
+                { FavoriteListScreen(viewModel, navHostController) })
             TabRowComponent(
                 tabs = tabs,
                 contentScreens = contentScreens,
@@ -233,7 +248,6 @@ fun TabRowComponent(
     indicatorColor: Color = Color.DarkGray,
     paddings: PaddingValues, viewModel: MainViewModel
 ) {
-    //var selectedTabIndex by remember { mutableIntStateOf(0) }
     val selectedTabIndex = viewModel.selectedTabIndex.value
     Column(
         modifier = modifier.padding(paddings)
@@ -243,12 +257,11 @@ fun TabRowComponent(
             containerColor = containerColor,
             contentColor = contentColor,
             indicator = { tabPositions ->
-                TabRowDefaults.Indicator(
+                SecondaryIndicator(
                     modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
                     color = indicatorColor
                 )
             },
-            //modifier = Modifier.height(50.dp),
             divider = @Composable {
 
             }
@@ -268,7 +281,6 @@ fun TabRowComponent(
 
 @Composable
 fun KnotsList(
-    contentPadding: PaddingValues,
     viewModel: MainViewModel,
     navHostController: NavHostController
 ) {
@@ -313,9 +325,7 @@ fun KnotItem(
         ) {
             Text(
                 viewModel.getLanguageString(knot.name),
-                modifier = Modifier
-//                    .fillMaxWidth()//.height(50.dp)
-                    .padding(start = 10.dp)
+                modifier = Modifier.padding(start = 10.dp)
             )
             if (viewModel.modeSelect.value) {
                 var isSelect by remember(knot.id) {
@@ -340,14 +350,14 @@ fun KnotItem(
                         Canvas(modifier = Modifier.fillMaxSize()) {
                             drawCircle(
                                 color = Color.Red,
-                                radius = size.minDimension / 2
+                                radius = size.minDimension / 4
                             )
                         }
                     else
                         Canvas(modifier = Modifier.fillMaxSize()) {
                             drawCircle(
                                 color = Color.White,
-                                radius = size.minDimension / 2
+                                radius = size.minDimension / 4
                             )
                         }
                 }
@@ -362,21 +372,21 @@ fun FavoriteButton(
     modifier: Modifier = Modifier,
     color: Color = Color(0xffE91E63)
 ) {
-    var isFavorite by remember { mutableStateOf(Repa.isKnotFavorite(knot)) }
+    var isFavorite by remember { mutableStateOf(DataRepository.isKnotFavorite(knot)) }
 
     IconToggleButton(
         checked = isFavorite,
         onCheckedChange = {
             isFavorite = !isFavorite
             if (isFavorite)
-                Repa.insertFavoriteKnot(
+                DataRepository.insertFavoriteKnot(
                     FavoriteKnot(
                         knot.id,
-                        Repa.getFavoriteKnots().value.size.toLong()
+                        DataRepository.getFavoriteKnots().value.size.toLong()
                     )
                 )
             else
-                Repa.deleteFavoriteKnots(knot.id)
+                DataRepository.deleteFavoriteKnots(knot.id)
         }
     ) {
         Icon(
@@ -411,7 +421,7 @@ fun TopBar(
                     value = viewModel.searchText.value,
                     onValueChange = {
                         viewModel.searchText.value = it
-                        Repa.readKnots(viewModel.searchText.value)
+                        DataRepository.readKnots(viewModel.searchText.value)
                     },
                     singleLine = true,
                     modifier = Modifier
@@ -424,7 +434,7 @@ fun TopBar(
                                 .clickable {
                                     viewModel.showSearchText.value = false
                                     viewModel.searchText.value = ""
-                                    Repa.readKnots()
+                                    DataRepository.readKnots()
                                 }
                         )
                     }
@@ -447,7 +457,7 @@ fun TopBar(
                     viewModel.showSearchText.value = !viewModel.showSearchText.value
                     if (!viewModel.showSearchText.value) {
                         viewModel.searchText.value = ""
-                        Repa.readKnots()
+                        DataRepository.readKnots()
                     }
                 }) {
                     Icon(Icons.Filled.Search, contentDescription = null)
@@ -506,7 +516,6 @@ fun Menu(navHostController: NavHostController, drawerState: DrawerState, scope: 
 @Composable
 fun KnotCardScreen(
     viewModel: MainViewModel,
-    navHostController: NavHostController,
     context: Context
 ) {
     val knot = viewModel.selectedElement
@@ -524,7 +533,7 @@ fun KnotCardScreen(
                     horizontalArrangement = Arrangement.End
                 ) { FavoriteButton(knot) }
             }
-            DescriptionKnot(knot, viewModel, modifier = modifier2, context)
+            DescriptionKnot(knot, viewModel, modifier = modifier2)
         }
     }
 }
@@ -535,7 +544,7 @@ fun ImageKnot(knot: Knot, viewModel: MainViewModel, context: Context, modifier: 
     val nameFile = knot.pictures[numSelect.intValue]
     val bitmap = viewModel.loadImageFromAssets(context, "knot$nameFile.png") ?: return
     val offsetX = remember { mutableFloatStateOf(0f) }
-    val colorFilterInvers = ColorFilter.colorMatrix(
+    val colorFilterInverse = ColorFilter.colorMatrix(
         ColorMatrix(
             floatArrayOf(
                 -1f, 0f, 0f, 0f, 255f,
@@ -546,7 +555,7 @@ fun ImageKnot(knot: Knot, viewModel: MainViewModel, context: Context, modifier: 
         )
     )
     val colorFilter =
-        if ((Settings.theme.value == ThemeK.DARK) or ((Settings.theme.value == ThemeK.SYSTEM) and (isSystemInDarkTheme()))) colorFilterInvers else null
+        if ((Settings.theme.value == ThemeK.DARK) or ((Settings.theme.value == ThemeK.SYSTEM) and (isSystemInDarkTheme()))) colorFilterInverse else null
 
     Column(modifier = Modifier.padding(10.dp)) {
         Image(
@@ -599,7 +608,7 @@ fun ImageKnot(knot: Knot, viewModel: MainViewModel, context: Context, modifier: 
 }
 
 @Composable
-fun DescriptionKnot(knot: Knot, viewModel: MainViewModel, modifier: Modifier, context: Context) {
+fun DescriptionKnot(knot: Knot, viewModel: MainViewModel, modifier: Modifier) {
     SelectionContainer(modifier = modifier) {
         Column(
             modifier = Modifier
@@ -619,8 +628,7 @@ fun DescriptionKnot(knot: Knot, viewModel: MainViewModel, modifier: Modifier, co
             }
             if (viewModel.showHideDescription.value) {
                 HtmlTextField(
-                    htmlText = viewModel.getLanguageString(knot.description),
-                    context = context
+                    htmlText = viewModel.getLanguageString(knot.description)
                 )
             }
         }
@@ -662,17 +670,15 @@ fun HtmlTextField(
     htmlText: String,
     baseSpanStyle: SpanStyle? = null,
     isHighlightLink: Boolean = false,
-    style: TextStyle = LocalTextStyle.current,
-    onUrlClick: ((url: String) -> Unit)? = null,
-    context: Context
+    onUrlClick: ((url: String) -> Unit)? = null
 ) {
     val formattedText = Html.fromHtml(htmlText.replace("\n", "<br>"), Html.FROM_HTML_MODE_COMPACT)
     val uriHandler = LocalUriHandler.current
     val linkColor = if (isHighlightLink) Color.Blue else Color.Unspecified
     val annotatedString =
         formattedText.toAnnotateString(baseSpanStyle = baseSpanStyle, linkColor = linkColor)
-//    var textColor by remember { mutableStateOf(Color.Black) }
     val colorText =
+//        if (Settings.theme.value == ThemeK.DARK) Color.White else Color.Black
         if (((Settings.theme.value == ThemeK.SYSTEM) and (isSystemInDarkTheme())) or (Settings.theme.value == ThemeK.DARK)) Color.White else Color.Black
     ClickableText(
         modifier = Modifier
@@ -682,7 +688,6 @@ fun HtmlTextField(
         style = TextStyle(
             textAlign = TextAlign.Justify,
             color = colorText,
-//            color = if ((Settings.theme.value == ThemeK.SYSTEM) and (isSystemInDarkTheme()) or (Settings.theme.value == ThemeK.DARK)) Color.White else Color.Black,
             fontSize = TextUnit(20f, TextUnitType.Sp)
         ),
     ) { offset ->
@@ -718,7 +723,6 @@ fun Spanned.toAnnotateString(
                 )
 
                 is ForegroundColorSpan -> addStyle(
-//                    SpanStyle(color = Color.Black), start, end
                     SpanStyle(color = Color(span.foregroundColor)), start, end
                 )
 
@@ -737,24 +741,19 @@ fun Spanned.toAnnotateString(
 
 @Composable
 fun TagsListScreen(
-    contentPadding: PaddingValues,
     viewModel: MainViewModel,
     navHostController: NavHostController
 ) {
-    viewModel.initKnotsOfTags(LocalLifecycleOwner.current)
-    if (viewModel.selectedTag.value != null) {
-
-    } else {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-        ) {
-            items(Repa.getTags().value) { tag ->
-                TagItem(viewModel, tag, navHostController)
-                viewModel.getKnotsByTag(tag)?.apply {
-                    for (id in this.value) {
-                        Repa.getKnot(id)?.apply {
-                            KnotItem(viewModel, this, navHostController)
-                        }
+    viewModel.initKnotsOfTags()
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        items(DataRepository.getTags().value) { tag ->
+            TagItem(viewModel, tag)
+            viewModel.getKnotsByTag(tag)?.apply {
+                for (id in this.value) {
+                    DataRepository.getKnot(id)?.apply {
+                        KnotItem(viewModel, this, navHostController)
                     }
                 }
             }
@@ -767,8 +766,7 @@ fun TagsListScreen(
 @Composable
 fun TagItem(
     viewModel: MainViewModel,
-    tag: Tag,
-    navHostController: NavHostController,
+    tag: Tag
 ) {
     Box(
         modifier = Modifier
@@ -803,15 +801,14 @@ fun TagItem(
 
 @Composable
 fun FavoriteListScreen(
-    contentPadding: PaddingValues,
     viewModel: MainViewModel,
     navHostController: NavHostController
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
     ) {
-        items(Repa.getFavoriteKnots().value) { favKnot ->
-            Repa.getKnot(favKnot.id)?.apply {
+        items(DataRepository.getFavoriteKnots().value) { favKnot ->
+            DataRepository.getKnot(favKnot.id)?.apply {
                 FavoriteKnotItem(viewModel, this, navHostController)
             }
         }
@@ -831,7 +828,7 @@ fun FavoriteKnotItem(
         confirmValueChange = {
             when (it) {
                 SwipeToDismissBoxValue.StartToEnd -> {
-                    Repa.deleteFavoriteKnots(knot.id)
+                    DataRepository.deleteFavoriteKnots(knot.id)
                 }
 
                 SwipeToDismissBoxValue.EndToStart -> {
@@ -845,22 +842,6 @@ fun FavoriteKnotItem(
         positionalThreshold = { it * .60f }, // positional threshold of 45%,
         density = Density(1f)
     )
-
-//    val dismissState = rememberSwipeToDismissBoxState(
-//        confirmValueChange = {
-//            when (it) {
-//                SwipeToDismissBoxValue.StartToEnd -> {
-//                    Repa.deleteFavoriteKnots(knot.id)
-//                }
-//                SwipeToDismissBoxValue.EndToStart -> {
-//
-//                }
-//                SwipeToDismissBoxValue.Settled -> return@rememberSwipeToDismissBoxState false
-//            }
-//            return@rememberSwipeToDismissBoxState true
-//        },
-//        positionalThreshold = { it * .45f } // positional threshold of 45%
-//    )
 
     SwipeToDismissBox(
         state = dismissState,
@@ -894,7 +875,6 @@ fun DismissBackground(dismissState: SwipeToDismissBoxState) {
         SwipeToDismissBoxValue.EndToStart -> Color.Transparent
         SwipeToDismissBoxValue.Settled -> Color.Transparent
     }
-
     Box(
         modifier = Modifier
             .padding(5.dp)

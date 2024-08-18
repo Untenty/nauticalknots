@@ -7,7 +7,7 @@ import kotlinx.coroutines.withContext
 class DbRepository(private val dbDao: DbDao) {
     // Knots
     suspend fun insertNewKnot(knotDbEntity: KnotDbEntity) {
-        withContext(Dispatchers.IO) {1
+        withContext(Dispatchers.IO) {
             dbDao.insertNewKnot(knotDbEntity)
         }
     }

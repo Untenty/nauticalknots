@@ -1,6 +1,5 @@
 package com.untenty.nauticalknots.entity
 
-import androidx.compose.runtime.mutableStateOf
 import com.untenty.nauticalknots.data.sql.KnotDbEntity
 
 data class Knot(

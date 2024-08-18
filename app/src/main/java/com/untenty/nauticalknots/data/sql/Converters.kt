@@ -1,8 +1,6 @@
 package com.untenty.nauticalknots.data.sql
 
-import androidx.room.TypeConverter
 import androidx.room.TypeConverters
-import com.untenty.nauticalknots.entity.TypeTag
 
 @TypeConverters(Converters::class)
 class Converters {

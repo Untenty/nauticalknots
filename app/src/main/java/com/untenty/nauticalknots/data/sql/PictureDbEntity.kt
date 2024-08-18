@@ -2,7 +2,6 @@ package com.untenty.nauticalknots.data.sql
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
-import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(

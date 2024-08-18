@@ -24,7 +24,7 @@ private val LightColorScheme = lightColorScheme(
 //    secondary = Color(0xffc91814),
     tertiary = Color(0xFF9C27B0),
     background = Color(0xffffffff), // основной фон
-//
+
 //    onPrimary = Color(0xFFE91E63), // содержимое primary
 //    primaryContainer = Color(0xffff9d30), // плавающая кнопка
 //    onPrimaryContainer = Color(0xFF00BCD4), // содержимое primaryContainer
@@ -77,7 +77,6 @@ fun NauticalknotsTheme(
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }

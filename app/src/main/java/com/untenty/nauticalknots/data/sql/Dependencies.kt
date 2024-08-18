@@ -2,8 +2,6 @@ package com.untenty.nauticalknots.data.sql
 
 import android.content.Context
 import androidx.room.Room
-import com.untenty.nauticalknots.data.sql.AppDatabase
-import com.untenty.nauticalknots.data.sql.DbRepository
 
 object Dependencies {
 

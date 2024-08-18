@@ -1,34 +1,29 @@
 [versions]
-accompanistPlaceholder = "0.10.0"
-accompanistReorderable = "<latest_version>"
 agp = "8.5.2"
 coilCompose = "2.0.0"
 datastorePreferences = "1.1.1"
 foundation = "1.6.8"
-gson = "2.8.7"
+gson = "2.10.1"
 kotlin = "1.9.0"
 coreKtx = "1.13.1"
 junit = "4.13.2"
-junitVersion = "1.1.5"
-espressoCore = "3.5.1"
+junitVersion = "1.2.1"
+espressoCore = "3.6.1"
 kotlinxSerializationJson = "1.6.3"
-lifecycleRuntimeKtx = "2.8.1"
-activityCompose = "1.9.0"
-composeBom = "2024.05.00"
+lifecycleRuntimeKtx = "2.8.4"
+activityCompose = "1.9.1"
+composeBom = "2024.06.00"
 moshi = "1.12.0"
 moshiKotlin = "1.12.0"
 moshiKotlinCodegen = "1.12.0"
 navigationCompose = "2.7.7"
-reorderable = "<latest_version>"
 roomRuntime = "2.6.1"
 runtime = "1.6.8"
-runtimeLivedata = "1.6.7"
+runtimeLivedata = "1.6.8"
 appcompat = "1.7.0"
 composeMaterial = "1.3.1"
 
 [libraries]
-accompanist-placeholder = { module = "com.google.accompanist:accompanist-placeholder", version.ref = "accompanistPlaceholder" }
-accompanist-reorderable = { module = "com.google.accompanist:accompanist-reorderable", version.ref = "accompanistReorderable" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
 androidx-foundation = { module = "androidx.compose.foundation:foundation", version.ref = "foundation" }
@@ -57,7 +52,6 @@ moshi-kotlin = { module = "com.squareup.moshi:moshi-kotlin", version.ref = "mosh
 moshi = { module = "com.squareup.moshi:moshi", version.ref = "moshi" }
 androidx-runtime-livedata = { group = "androidx.compose.runtime", name = "runtime-livedata", version.ref = "runtimeLivedata" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
-reorderable = { module = "org.burnoutcrew.composereorderable:reorderable", version.ref = "reorderable" }
 androidx-compose-material = { group = "androidx.wear.compose", name = "compose-material", version.ref = "composeMaterial" }
 
 [plugins]

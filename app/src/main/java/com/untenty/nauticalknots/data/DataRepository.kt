@@ -24,8 +24,9 @@ import java.io.InputStreamReader
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 
-object Repa {
+object DataRepository {
 
+    private const val DATA_FILE = "data.zip"
     private var listKnots: MutableState<List<Knot>> = mutableStateOf(listOf())
     private var listTags: MutableState<List<Tag>> = mutableStateOf(listOf())
     private var favoriteKnots: MutableState<List<FavoriteKnot>> = mutableStateOf(listOf())
@@ -39,7 +40,6 @@ object Repa {
             readKnots()
             readTags()
             readFavoriteKnots()
-//            initKnotsOfTags()
         }
     }
 
@@ -53,7 +53,7 @@ object Repa {
 
     private suspend fun firstLoad(context: Context) {
         val outputDir = File(context.filesDir, "unzipped")
-        unzipFromAssets(context, "data.zip", outputDir)
+        unzipFromAssets(context, outputDir)
         loadJsonToDb(context)
     }
 
@@ -70,6 +70,7 @@ object Repa {
         knots?.forEach {
             Dependencies.dbRepository.insertNewKnot(it.toKnotDbEntity())
             for (tag in it.tags) {
+                @Suppress("UNNECESSARY_SAFE_CALL") // room ever return type?
                 var idCurTag = Dependencies.dbRepository.getTagByName(tag.name)?.id
                 if (idCurTag == null) {
                     idCurTag = idTag
@@ -95,12 +96,11 @@ object Repa {
                 )
             }
         }
-
     }
 
-    private fun unzipFromAssets(context: Context, assetName: String, outputDir: File) {
+    private fun unzipFromAssets(context: Context, outputDir: File) {
         val assetManager = context.assets
-        val inputStream = assetManager.open(assetName)
+        val inputStream = assetManager.open(DATA_FILE)
         unzip(inputStream, outputDir)
     }
 
@@ -161,7 +161,7 @@ object Repa {
         return listTags
     }
 
-    fun readTags() {
+    private fun readTags() {
         CoroutineScope(Dispatchers.IO).launch {
             val listTagsL: MutableList<Tag> = mutableListOf()
             Dependencies.dbRepository.getAllTags().forEach {
@@ -188,26 +188,23 @@ object Repa {
         }
     }
 
-    fun renumberingFavoriteKnots() {
+    private fun renumberingFavoriteKnots() {
         CoroutineScope(Dispatchers.IO).launch {
             var ord = 0L
-            favoriteKnots.value.forEach { it ->
-                Dependencies.dbRepository.updateFavoriteKnotById(
-                    it.id,
-                    ord++
-                )
+            favoriteKnots.value.forEach {
+                Dependencies.dbRepository.updateFavoriteKnotById(it.id, ord++)
             }
         }
     }
 
-    fun readFavoriteKnots() {
+    private fun readFavoriteKnots() {
         CoroutineScope(Dispatchers.IO).launch {
-            val _favoriteKnots: MutableList<FavoriteKnot> = mutableListOf()
+            val favoriteKnotsTemp: MutableList<FavoriteKnot> = mutableListOf()
             Dependencies.dbRepository.getAllFavoriteKnot().forEach { knot ->
-                _favoriteKnots.add(FavoriteKnot(knot.id, knot.ord))
+                favoriteKnotsTemp.add(FavoriteKnot(knot.id, knot.ord))
             }
-            _favoriteKnots.sortBy { it.ord }
-            favoriteKnots.value = _favoriteKnots
+            favoriteKnotsTemp.sortBy { it.ord }
+            favoriteKnots.value = favoriteKnotsTemp
         }
     }
 

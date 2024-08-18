@@ -6,7 +6,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import com.untenty.nauticalknots.entity.AppSettings
 import com.untenty.nauticalknots.entity.LanguageK
 import com.untenty.nauticalknots.entity.ThemeK
 import kotlinx.coroutines.CoroutineScope
@@ -69,7 +68,4 @@ object Settings {
         }
     }
 
-//    fun getAppSettings(): AppSettings {
-//        return settings
-//    }
 }
