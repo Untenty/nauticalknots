@@ -26,7 +26,8 @@ import java.util.zip.ZipInputStream
 
 object DataRepository {
 
-    private const val DATA_FILE = "data.zip"
+    private const val DATA_FILE_ZIP = "data.zip"
+    private const val DATA_FILE = "data.json"
     private var listKnots: MutableState<List<Knot>> = mutableStateOf(listOf())
     private var listTags: MutableState<List<Tag>> = mutableStateOf(listOf())
     private var favoriteKnots: MutableState<List<FavoriteKnot>> = mutableStateOf(listOf())
@@ -58,12 +59,18 @@ object DataRepository {
     }
 
     private suspend fun loadJsonToDb(context: Context) {
-        val inputStream = context.assets.open("data.json")
-        val reader = InputStreamReader(inputStream)
         val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
         val listType = Types.newParameterizedType(List::class.java, Knot::class.java)
         val jsonAdapter: JsonAdapter<List<Knot>> = moshi.adapter(listType)
+        val inputStream = context.assets.open(DATA_FILE)
+        val reader = InputStreamReader(inputStream)
         val knots = jsonAdapter.fromJson(reader.readText())
+// +Dagger
+//        val appComponent = DaggerAppComponent.create(context)
+//        val appComponent2 = AppComponent.create(context)
+//        appComponent.getListKnotsWrapper(context)
+//        val knots = appComponent.getKnots()
+// -Dagger
         var idTagKnot = 0L
         var idPicture = 0L
         var idTag = 0L
@@ -100,7 +107,7 @@ object DataRepository {
 
     private fun unzipFromAssets(context: Context, outputDir: File) {
         val assetManager = context.assets
-        val inputStream = assetManager.open(DATA_FILE)
+        val inputStream = assetManager.open(DATA_FILE_ZIP)
         unzip(inputStream, outputDir)
     }
 
@@ -124,7 +131,7 @@ object DataRepository {
 
     fun readKnots(searchText: String = "") {
         CoroutineScope(Dispatchers.IO).launch {
-            val listKnots2: MutableList<Knot> = mutableListOf()
+            val listKnotsTemp: MutableList<Knot> = mutableListOf()
             for (knotDB in Dependencies.dbRepository.getAllKnots(searchText)) {
                 val newKnot = Knot(knotDB.id, knotDB.name, knotDB.description)
                 for (tagDB in Dependencies.dbRepository.getAllTagsKnot(knotDB.id)) {
@@ -134,10 +141,10 @@ object DataRepository {
                 for (picDB in Dependencies.dbRepository.getPicturesKnot(knotDB.id)) {
                     newKnot.pictures.add(picDB.path)
                 }
-                listKnots2.add(newKnot)
+                listKnotsTemp.add(newKnot)
             }
-            listKnots2.sortBy { getLanguageString(it.name) }
-            listKnots.value = listKnots2.toList()
+            listKnotsTemp.sortBy { getLanguageString(it.name) }
+            listKnots.value = listKnotsTemp.toList()
         }
     }
 

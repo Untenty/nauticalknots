@@ -100,7 +100,6 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
@@ -123,32 +122,25 @@ import com.untenty.nauticalknots.data.Settings
 import com.untenty.nauticalknots.entity.FavoriteKnot
 import com.untenty.nauticalknots.entity.Knot
 import com.untenty.nauticalknots.entity.Tag
-import com.untenty.nauticalknots.entity.ThemeK
+import com.untenty.nauticalknots.entity.ThemeEnum
 import com.untenty.nauticalknots.navigation.AppNavGraph
 import com.untenty.nauticalknots.navigation.Screen
 import com.untenty.nauticalknots.ui.theme.NauticalknotsTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-//val LocalAppLocale = staticCompositionLocalOf { Locale.getDefault() }
-
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         DataRepository.init(applicationContext)
         val viewModel = ViewModelProvider(this)[MainViewModel::class.java]
         setDimension(viewModel, this)
-
-//        val locale = loadLocale(this)
-
         setContent {
             viewModel.setLocale(LocalContext.current, Settings.language.value.name)
-//            val locale = Locale(Settings.language.value.name)
-//            val currentLocale = remember { locale }
-//            LocaleProvider(locale = currentLocale) {
             NauticalknotsTheme(
-                darkTheme = ((Settings.theme.value == ThemeK.SYSTEM) and (isSystemInDarkTheme())) or (Settings.theme.value == ThemeK.DARK),
-                dynamicColor = Settings.theme.value == ThemeK.SYSTEM
+                darkTheme = ((Settings.theme.value == ThemeEnum.SYSTEM) and (isSystemInDarkTheme())) or (Settings.theme.value == ThemeEnum.DARK),
+                dynamicColor = Settings.theme.value == ThemeEnum.SYSTEM
             ) {
                 Surface(
                     modifier = Modifier.fillMaxSize()//, color = MaterialTheme.colorScheme.background
@@ -156,20 +148,9 @@ class MainActivity : ComponentActivity() {
                     Screens(viewModel, applicationContext)
                 }
             }
-//            }
         }
     }
 }
-
-//@Composable
-//fun LocaleProvider(
-//    locale: Locale,
-//    content: @Composable () -> Unit
-//) {
-//    CompositionLocalProvider(LocalAppLocale provides locale) {
-//        content()
-//    }
-//}
 
 fun setDimension(viewModel: MainViewModel, context: ComponentActivity) {
     val displayMetrics = DisplayMetrics()
@@ -518,8 +499,7 @@ fun KnotCardScreen(
     viewModel: MainViewModel,
     context: Context
 ) {
-    val knot = viewModel.selectedElement
-    if (knot != null) {
+    viewModel.selectedKnot?.let {
         Column {
             val (modifier1, modifier2) = if (viewModel.showHideDescription.value) {
                 Pair(Modifier.weight(1f), Modifier.weight(2f))
@@ -527,13 +507,13 @@ fun KnotCardScreen(
                 Pair(Modifier.weight(1f), Modifier)
             }
             Box(modifier = modifier1) {
-                ImageKnot(knot, viewModel, context, modifier = Modifier)
+                ImageKnot(it, viewModel, context, modifier = Modifier)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
-                ) { FavoriteButton(knot) }
+                ) { FavoriteButton(it) }
             }
-            DescriptionKnot(knot, viewModel, modifier = modifier2)
+            DescriptionKnot(it, viewModel, modifier = modifier2)
         }
     }
 }
@@ -555,7 +535,7 @@ fun ImageKnot(knot: Knot, viewModel: MainViewModel, context: Context, modifier: 
         )
     )
     val colorFilter =
-        if ((Settings.theme.value == ThemeK.DARK) or ((Settings.theme.value == ThemeK.SYSTEM) and (isSystemInDarkTheme()))) colorFilterInverse else null
+        if ((Settings.theme.value == ThemeEnum.DARK) or ((Settings.theme.value == ThemeEnum.SYSTEM) and (isSystemInDarkTheme()))) colorFilterInverse else null
 
     Column(modifier = Modifier.padding(10.dp)) {
         Image(
@@ -678,8 +658,7 @@ fun HtmlTextField(
     val annotatedString =
         formattedText.toAnnotateString(baseSpanStyle = baseSpanStyle, linkColor = linkColor)
     val colorText =
-//        if (Settings.theme.value == ThemeK.DARK) Color.White else Color.Black
-        if (((Settings.theme.value == ThemeK.SYSTEM) and (isSystemInDarkTheme())) or (Settings.theme.value == ThemeK.DARK)) Color.White else Color.Black
+        if (((Settings.theme.value == ThemeEnum.SYSTEM) and (isSystemInDarkTheme())) or (Settings.theme.value == ThemeEnum.DARK)) Color.White else Color.Black
     ClickableText(
         modifier = Modifier
             .fillMaxWidth()
@@ -761,7 +740,6 @@ fun TagsListScreen(
     }
 }
 
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TagItem(
@@ -774,7 +752,7 @@ fun TagItem(
             .clip(RoundedCornerShape(5.dp))
             .background(MaterialTheme.colorScheme.errorContainer)
     ) {
-        val lifeCycleOwner = LocalLifecycleOwner.current
+        val lifeCycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
         Row(
             modifier = Modifier
                 .fillMaxSize()
@@ -816,7 +794,7 @@ fun FavoriteListScreen(
 
 }
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FavoriteKnotItem(
     viewModel: MainViewModel,
@@ -867,7 +845,6 @@ fun FavoriteKnotItem(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DismissBackground(dismissState: SwipeToDismissBoxState) {
     val color = when (dismissState.dismissDirection) {

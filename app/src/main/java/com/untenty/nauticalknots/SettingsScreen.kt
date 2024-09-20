@@ -12,6 +12,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -29,8 +30,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.untenty.nauticalknots.data.DataRepository
 import com.untenty.nauticalknots.data.Settings
-import com.untenty.nauticalknots.entity.LanguageK
-import com.untenty.nauticalknots.entity.ThemeK
+import com.untenty.nauticalknots.entity.LanguageEnum
+import com.untenty.nauticalknots.entity.ThemeEnum
 
 
 @Composable
@@ -52,7 +53,7 @@ fun ThemeSetting(context: Context) {
     ) {
         Column(modifier = Modifier.padding(all = 10.dp)) {
             Text(text = "${stringResource(R.string.theme_title)}:", fontSize = 20.sp)
-            ThemeK.entries.forEach {
+            ThemeEnum.entries.forEach {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(start = 10.dp)
@@ -97,13 +98,13 @@ fun LanguageSetting(context: Context, viewModel: MainViewModel) {
                     onValueChange = {},
                     readOnly = true,
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                    modifier = Modifier.menuAnchor()
+                    modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryEditable, true)
                 )
                 ExposedDropdownMenu(
                     expanded = expanded,
                     onDismissRequest = { expanded = false }
                 ) {
-                    LanguageK.entries.forEach {
+                    LanguageEnum.entries.forEach {
                         DropdownMenuItem(
                             onClick = {
                                 viewModel.setLocale(localContext, it.name)

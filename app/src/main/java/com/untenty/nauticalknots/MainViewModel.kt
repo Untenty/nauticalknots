@@ -24,7 +24,7 @@ import java.io.InputStream
 import java.util.Locale
 
 class MainViewModel : ViewModel() {
-    var selectedElement: Knot? = null
+    var selectedKnot: Knot? = null
     val selectedTabIndex: MutableState<Int> = mutableIntStateOf(0)
     val showHideDescription: MutableState<Boolean> = mutableStateOf(true)
 
@@ -54,7 +54,7 @@ class MainViewModel : ViewModel() {
     }
 
     fun openKnot(id: Long) {
-        selectedElement = DataRepository.getKnot(id)
+        selectedKnot = DataRepository.getKnot(id)
     }
 
     fun getLanguageString(str: String): String {
@@ -65,21 +65,16 @@ class MainViewModel : ViewModel() {
         val locale = Locale(languageCode)
         Locale.setDefault(locale)
         val config = context.resources.configuration
-//        val config = Configuration(context.resources.configuration)
         config.setLocale(locale)
         context.createConfigurationContext(config)
         context.resources.updateConfiguration(config, context.resources.displayMetrics)
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-//            config.setLocale(locale)
-//            context.createConfigurationContext(config)
-//        } else {
-//            config.locale = locale
-//            context.resources.updateConfiguration(config, context.resources.displayMetrics)
-//        }
     }
 
     // Knots tags
 
+    /**
+     * Initialize the list of knots of tags.
+     */
     fun initKnotsOfTags() {
         if (listKnotsOfTags.size == 0) {
             for (tag in DataRepository.getTags().value) {

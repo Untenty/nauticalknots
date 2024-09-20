@@ -1,8 +1,9 @@
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.jetbrains.kotlin.android)
-    kotlin("plugin.serialization") version "1.9.22"
-    id("com.google.devtools.ksp")
+    alias(libs.plugins.android.application) apply true
+    alias(libs.plugins.jetbrains.kotlin.android) apply true
+    kotlin("plugin.serialization") version "1.9.22" apply true
+    id("com.google.devtools.ksp") version "2.0.20-1.0.25" apply true
+    alias(libs.plugins.compose.compiler) apply true
 }
 
 android {
@@ -38,23 +39,21 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_15
+        targetCompatibility = JavaVersion.VERSION_15
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "15"
     }
     buildFeatures {
         compose = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
     }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+
 }
 
 dependencies {
@@ -107,5 +106,8 @@ dependencies {
 //    implementation(libs.accompanist.placeholder)
 
     implementation(libs.gson)
+
+    implementation(libs.dagger)
+    ksp(libs.dagger.compiler)
 
 }

@@ -6,8 +6,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import com.untenty.nauticalknots.entity.LanguageK
-import com.untenty.nauticalknots.entity.ThemeK
+import com.untenty.nauticalknots.entity.LanguageEnum
+import com.untenty.nauticalknots.entity.ThemeEnum
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -21,8 +21,8 @@ object PreferencesKeys {
 
 object Settings {
     //private var settings: AppSettings = AppSettings(ThemeK.SYSTEM, Language.RU)
-    var theme: MutableState<ThemeK> = mutableStateOf(ThemeK.SYSTEM)
-    var language: MutableState<LanguageK> = mutableStateOf(LanguageK.EN)
+    var theme: MutableState<ThemeEnum> = mutableStateOf(ThemeEnum.SYSTEM)
+    var language: MutableState<LanguageEnum> = mutableStateOf(LanguageEnum.EN)
     private const val DATASTORE_NAME = "settings"
     private val Context.dataStore by preferencesDataStore(name = DATASTORE_NAME)
 
@@ -56,15 +56,15 @@ object Settings {
         // DataStore
         val themeFlow = context.dataStore.data
             .map { preferences ->
-                preferences[PreferencesKeys.THEME] ?: ThemeK.SYSTEM.name
+                preferences[PreferencesKeys.THEME] ?: ThemeEnum.SYSTEM.name
             }
         val languageFlow = context.dataStore.data
             .map { preferences ->
-                preferences[PreferencesKeys.LANGUAGE] ?: LanguageK.RU.name
+                preferences[PreferencesKeys.LANGUAGE] ?: LanguageEnum.RU.name
             }
         CoroutineScope(Dispatchers.IO).launch {
-            theme.value = ThemeK.valueOf(themeFlow.first())
-            language.value = LanguageK.valueOf(languageFlow.first())
+            theme.value = ThemeEnum.valueOf(themeFlow.first())
+            language.value = LanguageEnum.valueOf(languageFlow.first())
         }
     }
 
