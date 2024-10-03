@@ -21,6 +21,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
 import java.io.InputStreamReader
+import java.util.Locale
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 
@@ -62,7 +63,8 @@ object DataRepository {
         val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
         val listType = Types.newParameterizedType(List::class.java, Knot::class.java)
         val jsonAdapter: JsonAdapter<List<Knot>> = moshi.adapter(listType)
-        val inputStream = context.assets.open(DATA_FILE)
+//        val inputStream = context.assets.open(DATA_FILE)
+        val inputStream = File(context.filesDir.path + "/unzipped/" + DATA_FILE).inputStream()
         val reader = InputStreamReader(inputStream)
         val knots = jsonAdapter.fromJson(reader.readText())
 // +Dagger
@@ -103,6 +105,18 @@ object DataRepository {
                 )
             }
         }
+    }
+
+    fun setLocale(context: Context, languageCode: String) {
+        val locale = Locale(languageCode)
+        Locale.setDefault(locale)
+        val config = context.resources.configuration
+        config.setLocale(locale)
+        context.createConfigurationContext(config)
+        context.resources.updateConfiguration(config, context.resources.displayMetrics)
+//        val config2 = Configuration(context.resources.configuration)
+//        config2.setLocale(Locale("en")) // Set locale to English, for example
+//        val newContext = context.createConfigurationContext(config2)
     }
 
     private fun unzipFromAssets(context: Context, outputDir: File) {

@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.untenty.nauticalknots.R
 import com.untenty.nauticalknots.entity.LanguageEnum
 import com.untenty.nauticalknots.entity.ThemeEnum
 import kotlinx.coroutines.CoroutineScope
@@ -22,11 +23,9 @@ object PreferencesKeys {
 object Settings {
     //private var settings: AppSettings = AppSettings(ThemeK.SYSTEM, Language.RU)
     var theme: MutableState<ThemeEnum> = mutableStateOf(ThemeEnum.SYSTEM)
-    var language: MutableState<LanguageEnum> = mutableStateOf(LanguageEnum.EN)
+    val language: MutableState<LanguageEnum> = mutableStateOf(LanguageEnum.RU)
     private const val DATASTORE_NAME = "settings"
     private val Context.dataStore by preferencesDataStore(name = DATASTORE_NAME)
-
-
 
     fun init(context: Context) {
         readAppSettings(context)
@@ -54,15 +53,16 @@ object Settings {
 //            Json.decodeFromString(settingsStr)
 //        } else AppSettings("")
         // DataStore
-        val themeFlow = context.dataStore.data
-            .map { preferences ->
-                preferences[PreferencesKeys.THEME] ?: ThemeEnum.SYSTEM.name
-            }
-        val languageFlow = context.dataStore.data
-            .map { preferences ->
-                preferences[PreferencesKeys.LANGUAGE] ?: LanguageEnum.RU.name
-            }
         CoroutineScope(Dispatchers.IO).launch {
+            val themeFlow = context.dataStore.data
+                .map { preferences ->
+                    preferences[PreferencesKeys.THEME] ?: ThemeEnum.SYSTEM.name
+                }
+            val languageFlow = context.dataStore.data
+                .map { preferences ->
+                    preferences[PreferencesKeys.LANGUAGE]
+                        ?: context.resources.getString(R.string.current_locale)
+                }
             theme.value = ThemeEnum.valueOf(themeFlow.first())
             language.value = LanguageEnum.valueOf(languageFlow.first())
         }

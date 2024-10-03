@@ -7,6 +7,10 @@ plugins {
 }
 
 android {
+    signingConfigs {
+        create("release") {
+        }
+    }
     namespace = "com.untenty.nauticalknots"
     compileSdk = 34
 
@@ -31,11 +35,13 @@ android {
 
     buildTypes {
         release {
+            isCrunchPngs = false
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
@@ -107,7 +113,7 @@ dependencies {
 
     implementation(libs.gson)
 
-    implementation(libs.dagger)
-    ksp(libs.dagger.compiler)
+//    implementation(libs.dagger)
+//    ksp(libs.dagger.compiler)
 
 }

@@ -44,6 +44,7 @@ fun SettingsScreen(context: Context, viewModel: MainViewModel) {
 
 @Composable
 fun ThemeSetting(context: Context) {
+    Settings.language.value
     Card(
         modifier = Modifier
             .fillMaxWidth()

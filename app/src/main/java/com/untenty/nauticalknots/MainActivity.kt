@@ -34,6 +34,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -513,7 +514,7 @@ fun KnotCardScreen(
                     horizontalArrangement = Arrangement.End
                 ) { FavoriteButton(it) }
             }
-            DescriptionKnot(it, viewModel, modifier = modifier2)
+            DescriptionKnot(it, viewModel, modifier = modifier2, context)
         }
     }
 }
@@ -544,7 +545,8 @@ fun ImageKnot(knot: Knot, viewModel: MainViewModel, context: Context, modifier: 
             colorFilter = colorFilter,
             modifier = modifier
                 .fillMaxSize()
-                .pointerInput(Unit) {
+//                .sizeIn(minHeight = 200.dp)
+                .pointerInput(Unit) { // Move over the image
                     detectDragGestures { change, dragAmount ->
                         change.consume()
                         offsetX.floatValue += dragAmount.x
@@ -561,7 +563,7 @@ fun ImageKnot(knot: Knot, viewModel: MainViewModel, context: Context, modifier: 
                         }
                     }
                 }
-                .pointerInput(Unit) {
+                .pointerInput(Unit) { // Click on the edges of the image
                     detectTapGestures { offset ->
                         if (offset.x > viewModel.widthScreen - viewModel.widthScreen / 6) {
                             if (numSelect.intValue < knot.pictures.size - 1) {
@@ -588,11 +590,12 @@ fun ImageKnot(knot: Knot, viewModel: MainViewModel, context: Context, modifier: 
 }
 
 @Composable
-fun DescriptionKnot(knot: Knot, viewModel: MainViewModel, modifier: Modifier) {
+fun DescriptionKnot(knot: Knot, viewModel: MainViewModel, modifier: Modifier, context: Context) {
     SelectionContainer(modifier = modifier) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .sizeIn(maxHeight = viewModel.pxToDp(viewModel.heightScreen * 0.7, context))
                 .padding(16.dp)
         ) {
             Row(

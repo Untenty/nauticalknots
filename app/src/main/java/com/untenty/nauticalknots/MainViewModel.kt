@@ -6,6 +6,8 @@ import android.graphics.BitmapFactory
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
@@ -21,7 +23,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.InputStream
-import java.util.Locale
 
 class MainViewModel : ViewModel() {
     var selectedKnot: Knot? = null
@@ -62,12 +63,7 @@ class MainViewModel : ViewModel() {
     }
 
     fun setLocale(context: Context, languageCode: String) {
-        val locale = Locale(languageCode)
-        Locale.setDefault(locale)
-        val config = context.resources.configuration
-        config.setLocale(locale)
-        context.createConfigurationContext(config)
-        context.resources.updateConfiguration(config, context.resources.displayMetrics)
+        DataRepository.setLocale(context, languageCode)
     }
 
     // Knots tags
@@ -154,6 +150,10 @@ class MainViewModel : ViewModel() {
         selectedItems.value.forEach { id ->
             DataRepository.insertFavoriteKnot(FavoriteKnot(id, DataRepository.getFavoriteKnots().value.size.toLong()))
         }
+    }
+
+    fun pxToDp(px: Double, context: Context): Dp {
+        return (px / (context.resources.displayMetrics.densityDpi / 160f)).dp
     }
 
 }
